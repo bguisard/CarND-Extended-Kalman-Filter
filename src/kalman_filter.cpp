@@ -1,4 +1,5 @@
 #include "kalman_filter.h"
+#include <cmath>
 
 using Eigen::MatrixXd;
 using Eigen::VectorXd;
@@ -27,8 +28,7 @@ void KalmanFilter::Update(const VectorXd &z) {
   VectorXd y = z - H_ * x_;
   MatrixXd Ht = H_.transpose();    // storing Ht matrix to improve speed
   MatrixXd S = H_ * P_ * Ht + R_;
-  MatrixXd Si = S.inverse();       // storing S inverse to improve speed
-  MatrixXd K = P_ * Ht * Si;
+  MatrixXd K = P_ * Ht * S.inverse();
 
   // New Estimate
   x_ = x_ + (K * y);
@@ -37,8 +37,24 @@ void KalmanFilter::Update(const VectorXd &z) {
 }
 
 void KalmanFilter::UpdateEKF(const VectorXd &z) {
-  /**
-  TODO:
-    * update the state by using Extended Kalman Filter equations
-  */
+  // EKF update equations
+
+  // converts back from cartesian to polar coords
+  // store some useful values
+  float sqrtPx2Py2 = std::sqrt(x_[0] * x_[0] + x_[1] * x_[1]);   // sqrt(px^2 + py^2)
+
+  VectorXd h_x_ = VectorXd(3);
+  h_x_ << sqrtPx2Py2,
+          std::atan2(x_[1], x_[0]),
+          (x_[0] * x_[2] + x_[1] * x_[3]) / sqrtPx2Py2; // px*vx + py*vy / sqrt(px^2 + py^2)
+
+  VectorXd y = z - h_x_;
+  MatrixXd Ht = H_.transpose();    // storing Ht matrix to improve speed
+  MatrixXd S = H_ * P_ * Ht + R_;
+  MatrixXd K = P_ * Ht * S.inverse();
+
+  // New Estimate
+  x_ = x_ + (K * y);
+  MatrixXd I = MatrixXd::Identity(x_.size(), x_.size());
+  P_ = (I - K * H_) * P_;
 }
