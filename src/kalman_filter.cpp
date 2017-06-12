@@ -40,15 +40,23 @@ void KalmanFilter::UpdateEKF(const VectorXd &z) {
   // EKF update equations
 
   // converts back from cartesian to polar coords
-  // store some useful values
-  float sqrtPx2Py2 = std::sqrt(x_[0] * x_[0] + x_[1] * x_[1]);   // sqrt(px^2 + py^2)
+  // store sqrt(px^2 + py^2) to avoid repeated calcs
+  float sqrtPx2Py2 = std::sqrt(x_[0] * x_[0] + x_[1] * x_[1]);
 
+  // in this step we implement h(x') 
   VectorXd h_x_ = VectorXd(3);
   h_x_ << sqrtPx2Py2,
           std::atan2(x_[1], x_[0]),
           (x_[0] * x_[2] + x_[1] * x_[3]) / sqrtPx2Py2; // px*vx + py*vy / sqrt(px^2 + py^2)
 
   VectorXd y = z - h_x_;
+
+  // make sure phi' is within [-pi, pi]
+  if (std::abs(y(1) > M_PI)) {
+    while (y(1) > M_PI) y(1) -= 2 * M_PI;
+    while (y(1) < -M_PI) y(1) += 2 * M_PI;
+  }
+
   MatrixXd Ht = H_.transpose();    // storing Ht matrix to improve speed
   MatrixXd S = H_ * P_ * Ht + R_;
   MatrixXd K = P_ * Ht * S.inverse();
