@@ -53,8 +53,8 @@ void KalmanFilter::UpdateEKF(const VectorXd &z) {
 
   // make sure phi' is within [-pi, pi]
   if (std::abs(y(1) > M_PI)) {
-    while (y(1) > M_PI) y(1) -= 2 * M_PI;
-    while (y(1) < -M_PI) y(1) += 2 * M_PI;
+    if (y(1) > M_PI) y(1) -= 2 * M_PI;
+    if (y(1) < -M_PI) y(1) += 2 * M_PI;
   }
 
   MatrixXd Ht = H_.transpose();    // storing Ht matrix to improve speed
