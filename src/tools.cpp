@@ -70,7 +70,7 @@ MatrixXd Tools::CalculateJacobian(const VectorXd& x_state) {
   float divisor1 = px*px + py*py;
 
   // (II) - Square root of sum of squared px and py
-  float divisor2 = std::sqrt(sumSq);
+  float divisor2 = std::sqrt(divisor1);
 
   // (III) - Product of I and II
   float divisor3 = (divisor1 * divisor2);
